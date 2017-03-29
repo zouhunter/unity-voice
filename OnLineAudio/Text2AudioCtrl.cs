@@ -5,112 +5,171 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 using System.Collections.Generic;
+using VoiceRSS_SDK;
 
-
-public class Text2AudioCtrl : SingleLengon<Text2AudioCtrl>, ITextToAudio
+namespace Txt2Audio
 {
-    //本地文件路径
-    public string wavFilePath;
-    public string md5FileName = "AudioMD5.csv";
-    //FileMD5Table table;
-    public Dictionary<string, string> SavedWav = new Dictionary<string, string>();
-    //http://www.voicerss.org/api/documentation.aspx
     //测试通过http://api.voicerss.org/?key=ceb04420d03d434a91e81608de6d1576&c=OGG&hl=en-us&src=你好Hello,%20world!123"
-    private static string tempAudio = "http://api.voicerss.org/?key=ceb04420d03d434a91e81608de6d1576&c=OGG&hl={0}&f={1}&src=";
-
-    public static class Languages
+    public class Text2AudioCtrl : ITextToAudio
     {
-        public static string china = "zh-cn";
-        public static string english = "en-us";
-    }
-    public static class Formats
-    {
-        public static string verylow = "11khz_8bit_mono";
-        public static string normal = "alaw_22khz_stereo";
-        public static string veryGood = "ulaw_44khz_stereo";
-    }
-    private static string GetConnectionString(string langluage, string formats)
-    {
-        return string.Format(tempAudio, langluage, formats);
-    }
-
-    public Text2AudioCtrl()
-    {
-        wavFilePath = Application.streamingAssetsPath + "/Audio";
-        //CsvConfigManager.GetInstance().LoadConfigAsync<FileMD5Table>(md5FileName, (x) =>
-        //{
-        //    table = x;
-        //    foreach (var item in x.GetRowList())
-        //    {
-        //        if (item.md5 == null)
-        //        {
-        //            continue;
-        //        }
-        //        SavedWav.Add(item.md5, item.fileName);
-        //    }
-        //});
-    }
-
-    public IEnumerator GetAudioClip(string text, string format, UnityAction<AudioClip> OnGet)
-    {
-        WWW www;
-        string key = FileUtility.md5(text) + format;//!!!!!!!!!!!!!!!!!!!!!!增加权
-        string filePath = Path.Combine(wavFilePath, key + ".ogg");
-        if (!SavedWav.ContainsKey(key))
+        #region 单例
+        private static Text2AudioCtrl instance = default(Text2AudioCtrl);
+        private static object lockHelper = new object();
+        public static bool mManualReset = false;
+        protected Text2AudioCtrl()
         {
-            Debug.Log("没有文件");
-            string url = GetConnectionString(Languages.china, format) + text;
-            www = new WWW(url);
-            yield return www;
-            if (www.error != null)
+            musicCache = new ClassCacheCtrl(Application.dataPath);
+            localAudio = musicCache.LoadClassFromLocal<LocalAudio>("audiorecord") ?? new LocalAudio();
+        }
+
+        public static Text2AudioCtrl Instance
+        {
+            get
             {
-                Debug.LogWarning(www.error);
+                if (instance == null)
+                {
+                    lock (lockHelper)
+                    {
+                        if (instance == null)
+                        {
+
+                            instance = new Text2AudioCtrl();
+                        }
+                    }
+                }
+                return instance;
+            }
+        }
+        #endregion
+        //本地文件路径
+        ClassCacheCtrl musicCache;
+        LocalAudio localAudio;
+        /// <summary>
+        /// 获取默认的网络音频下载器
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        VoiceProvider DefultVP
+        {
+            get
+            {
+                VoiceProvider defultVP = new VoiceProvider("ceb04420d03d434a91e81608de6d1576");
+                return defultVP;
+            }
+
+        }
+        /// <summary>
+        /// 获取默认参数
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        VoiceParameters DefultPar(string text)
+        {
+            VoiceParameters defultPar = new VoiceParameters(text, Languages.Chinese_China);
+            defultPar.AudioCodec = AudioCodec.OGG;
+            defultPar.SpeedRate = 1;
+            defultPar.AudioFormat = AudioFormat.Format_alaw.AF_alaw_22khz_stereo;
+            return defultPar;
+        }
+
+        /// <summary>
+        /// 获取音频
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="OnGet"></param>
+        /// <returns></returns>
+        public IEnumerator GetAudioClip(string text, UnityAction<AudioClip> OnGet)
+        {
+            if (localAudio.Contain(text))
+            {
+                yield return LoadFromFile(text, (x) =>
+                {
+                    if (x != null) {
+                        OnGet(x);
+                    }
+                });
+            }
+            if (!localAudio.Contain(text))
+                yield return DownLandFromWeb(text, OnGet);
+        }
+
+        IEnumerator DownLandFromWeb(string text, UnityAction<AudioClip> OnGet)
+        {
+            VoiceProvider vp = DefultVP;
+            VoiceParameters par = DefultPar(text);
+            vp.SpeechReady += (result) =>
+            {
+                OnGet(result.GetAudioClip(false, false, AudioType.OGGVORBIS));
+                localAudio.Register(text);
+                SaveToLocal(text, result.bytes);
+            };
+            vp.SpeechFailed += (err) =>
+            {
+                Debug.Log(err);
+                OnGet(null);
+                localAudio.Remove(text);
+            };
+            yield return vp.SpeechAsync(DefultPar(text));
+        }
+
+        /// <summary>
+        /// 从本地下载
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="OnGet"></param>
+        /// <returns></returns>
+        IEnumerator LoadFromFile(string text, UnityAction<AudioClip> OnGet)
+        {
+            string path = localAudio.GetPath(text);
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            {
+                WWW www = new WWW("file:///" + path);
+                yield return www;
+                if (www.error != null)
+                {
+                    OnGet(null);
+                    Debug.Log(www.error);
+                }
+                else
+                {
+                    OnGet(www.GetAudioClip(false,false,AudioType.OGGVORBIS));
+                }
             }
             else
             {
-                //File.WriteAllBytes(filePath, www.bytes);
-                OnGet(www.GetAudioClip(false,false,AudioType.OGGVORBIS));
-                //更新csv文件
-                //if (table != null)
-                //{
-                //    FileMD5Table.Row rowx = new global::FileMD5Table.Row();
-                //    rowx.fileName = filePath;
-                //    rowx.md5 = key;
-                //    table.GetRowList().Add(rowx);
-                //    SavedWav.Add(rowx.md5, rowx.fileName);
-                //    CsvConfigManager.SaveConfig(md5FileName, table);
-                //}
+                OnGet(null);
             }
         }
-
-        if (!FileUtility.IsFileExist(filePath)) yield break;
-
-        www = new WWW("file:///" + filePath);
-        yield return www;
-
-        if (www.error != null)
+        /// <summary>
+        /// 保存信息到本地
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="bytes"></param>
+        void SaveToLocal(string text,byte[] bytes)
         {
-            Debug.LogError(www.error);
+            string path = localAudio.GetPath(text);
+            File.WriteAllBytes(path, bytes);
+            UpdateLocalRecord();
         }
-
-        if (www.audioClip != null && OnGet != null)
+        /// <summary>
+        /// 更新本地记录
+        /// </summary>
+        void UpdateLocalRecord()
         {
-            OnGet(www.audioClip);
+            musicCache.SaveClassToLocal(localAudio, "audiorecord");
         }
-        else
+        /// <summary>
+        /// 清除所有本地信息
+        /// </summary>
+        public void CleanUp()
         {
-            Debug.LogError("转换失败");
+            for (int i = 0; i < localAudio.texts.Count; i++){
+                string path = localAudio.GetPath(localAudio.texts[i]); 
+                if (File.Exists(path)){
+                    File.Delete(path);
+                }
+            }
+            localAudio.texts = new List<string>();
         }
     }
 }
-
-/*Parameter name 	Parameter description
-key 	The API key (mandatory)
-src 	The textual content for converting to speech (length limited by 100KB) (mandatory).
-hl 	The textual content language. Allows values: see Languages. (mandatory)
-r 	The speech rate (speed). Allows values: from -10 (slowest speed) up to 10 (fastest speed). Default value: 0 (normal speed). (optional)
-c 	The speech audio codec. Allows values: see Audio Codecs. Default value: MP3. (optional)
-f 	The speech audio formats. Allows values: see Audio Formats. Default value: 8khz_8bit_mono. (optional)
-ssml 	The SSML textual content format. Allows values: true and false. Default value: false. (optional)
-b64 	Defines output as a Base64 string format (for an internet browser playing). Allows values: true and false. Default value: false. (optional) */
-

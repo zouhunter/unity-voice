@@ -6,7 +6,11 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public interface ITextToAudio {
-    IEnumerator GetAudioClip(string text, string format, UnityAction<AudioClip> OnGet);
-    
+namespace Txt2Audio
+{
+    public interface ITextToAudio
+    {
+        IEnumerator GetAudioClip(string text, UnityAction<AudioClip> OnGet);
+        void CleanUp();
+    }
 }
