@@ -10,19 +10,19 @@ using VoiceRSS_SDK;
 namespace Txt2Audio
 {
     //测试通过http://api.voicerss.org/?key=ceb04420d03d434a91e81608de6d1576&c=OGG&hl=en-us&src=你好Hello,%20world!123"
-    public class Text2AudioCtrl : ITextToAudio
+    public class Txt2AudioCtrl : ITextToAudio
     {
         #region 单例
-        private static Text2AudioCtrl instance = default(Text2AudioCtrl);
+        private static Txt2AudioCtrl instance = default(Txt2AudioCtrl);
         private static object lockHelper = new object();
         public static bool mManualReset = false;
-        protected Text2AudioCtrl()
+        protected Txt2AudioCtrl()
         {
             musicCache = new ClassCacheCtrl(Application.dataPath);
             localAudio = musicCache.LoadClassFromLocal<LocalAudio>("audiorecord") ?? new LocalAudio();
         }
 
-        public static Text2AudioCtrl Instance
+        public static Txt2AudioCtrl Instance
         {
             get
             {
@@ -33,7 +33,7 @@ namespace Txt2Audio
                         if (instance == null)
                         {
 
-                            instance = new Text2AudioCtrl();
+                            instance = new Txt2AudioCtrl();
                         }
                     }
                 }
@@ -80,17 +80,18 @@ namespace Txt2Audio
         /// <returns></returns>
         public IEnumerator GetAudioClip(string text, UnityAction<AudioClip> OnGet)
         {
-            if (localAudio.Contain(text))
+            AudioData audioData = localAudio.GetAudioData(text);
+            if (audioData != null)
             {
-                yield return LoadFromFile(text, (x) =>
-                {
-                    if (x != null) {
-                        OnGet(x);
-                    }
-                });
+                Debug.Log(audioData.lengthSamples);
+
+                AudioClip clip = AudioClip.Create(audioData.key, audioData.lengthSamples, audioData.channels, audioData.frequency, audioData.stream);
+                clip.SetData(audioData.data,0);
+                OnGet(clip);
             }
-            if (!localAudio.Contain(text))
+            else{
                 yield return DownLandFromWeb(text, OnGet);
+            }
         }
 
         IEnumerator DownLandFromWeb(string text, UnityAction<AudioClip> OnGet)
@@ -99,9 +100,10 @@ namespace Txt2Audio
             VoiceParameters par = DefultPar(text);
             vp.SpeechReady += (result) =>
             {
-                OnGet(result.GetAudioClip(false, false, AudioType.OGGVORBIS));
-                localAudio.Register(text);
-                SaveToLocal(text, result.bytes);
+                AudioClip clip = result.GetAudioClip(false, false, AudioType.OGGVORBIS);
+                OnGet(clip);
+                localAudio.Register(text, clip);
+                UpdateLocalRecord();
             };
             vp.SpeechFailed += (err) =>
             {
@@ -109,48 +111,9 @@ namespace Txt2Audio
                 OnGet(null);
                 localAudio.Remove(text);
             };
-            yield return vp.SpeechAsync(DefultPar(text));
+            yield return vp.SpeechAsync(par);
         }
 
-        /// <summary>
-        /// 从本地下载
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="OnGet"></param>
-        /// <returns></returns>
-        IEnumerator LoadFromFile(string text, UnityAction<AudioClip> OnGet)
-        {
-            string path = localAudio.GetPath(text);
-            if (!string.IsNullOrEmpty(path) && File.Exists(path))
-            {
-                WWW www = new WWW("file:///" + path);
-                yield return www;
-                if (www.error != null)
-                {
-                    OnGet(null);
-                    Debug.Log(www.error);
-                }
-                else
-                {
-                    OnGet(www.GetAudioClip(false,false,AudioType.OGGVORBIS));
-                }
-            }
-            else
-            {
-                OnGet(null);
-            }
-        }
-        /// <summary>
-        /// 保存信息到本地
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="bytes"></param>
-        void SaveToLocal(string text,byte[] bytes)
-        {
-            string path = localAudio.GetPath(text);
-            File.WriteAllBytes(path, bytes);
-            UpdateLocalRecord();
-        }
         /// <summary>
         /// 更新本地记录
         /// </summary>
@@ -163,13 +126,8 @@ namespace Txt2Audio
         /// </summary>
         public void CleanUp()
         {
-            for (int i = 0; i < localAudio.texts.Count; i++){
-                string path = localAudio.GetPath(localAudio.texts[i]); 
-                if (File.Exists(path)){
-                    File.Delete(path);
-                }
-            }
-            localAudio.texts = new List<string>();
+            localAudio.audioData.Clear();
+            UpdateLocalRecord();
         }
     }
 }

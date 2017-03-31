@@ -16,49 +16,59 @@ namespace Txt2Audio
                 return "Audio";
             }
         }
-        public List<string> texts = new List<string>();
-
-        public void Register(string text)
+        public List<AudioData> audioData = new List<AudioData>();
+        public void Register(string text,AudioClip data)
         {
-            if (!texts.Contains(text)){
-                texts.Add(text);
+            AudioData old = audioData.Find(x => x.key == text);
+            if (old == null){
+
+                audioData.Add(new AudioData(text,data));
             }
-        }
-        public bool Contain(string text){
-            return texts.Contains(text);
+            else
+            {
+                old.SetData(data);
+            }
         }
         public void Remove(string text)
         {
-            if (texts.Contains(text))
+            AudioData old = audioData.Find(x => x.key == text);
+            if (old != null)
             {
-                texts.Remove(text);
+                audioData.Remove(old);
             }
         }
-        public string GetPath(string text)
+        public AudioData GetAudioData(string text)
         {
-            if (texts.Contains(text)){
-                return string.Format("{0}/{1}/{2}.audio",Application.streamingAssetsPath,StreamRoot,md5(text));
-            }
-            return null;
+            AudioData old = audioData.Find(x => x.key == text);
+            return old;
         }
-        /// <summary>
-        /// 计算字符串的MD5值
-        /// </summary>
-        public static string md5(string source)
+    }
+
+    [System.Serializable]
+    public class AudioData
+    {
+        public string key;
+        public int lengthSamples;
+        public int channels;
+        public int frequency;
+        public bool stream;
+        public float[] data;
+
+        public AudioData(string key,AudioClip clip)
         {
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            byte[] data = System.Text.Encoding.UTF8.GetBytes(source);
-            byte[] md5Data = md5.ComputeHash(data, 0, data.Length);
-            md5.Clear();
-
-            string destString = "";
-            for (int i = 0; i < md5Data.Length; i++)
-            {
-                destString += System.Convert.ToString(md5Data[i], 16).PadLeft(2, '0');
-            }
-            destString = destString.PadLeft(32, '0');
-            return destString;
+            this.key = key;
+            this.lengthSamples = clip.samples;
+            this.channels = clip.channels;
+            this.frequency = clip.frequency;
+            this.stream = false;
+            SetData(clip);
         }
 
+        public void SetData(AudioClip clip)
+        {
+            float[] samples = new float[clip.samples * clip.channels];
+            clip.GetData(samples, 0);
+            data = samples;
+        }
     }
 }

@@ -95,6 +95,7 @@ namespace VoiceRSS_SDK
             string url = string.Format("{0}://{1}/?{2}", hader, address, par);
             System.Uri uri;
             System.Uri.TryCreate(url, System.UriKind.Absolute, out uri);
+            Debug.Log(uri);
             WWW www = new WWW(uri.AbsoluteUri);/*mast be % escaped*/
             yield return www;
             if (www.error == null)
