@@ -12,7 +12,7 @@ namespace IFLYSpeech
     {
         event UnityAction<string> onError;
         IEnumerator GetAudioClip(string text, UnityAction<AudioClip> OnGet, Params param = null);
-        IEnumerator Downland(string[] text,UnityAction<float> onProgressChanged);
+        IEnumerator Downland(string[] text,UnityAction<float> onProgressChanged ,Params param = null);
         void CleanUpCatchs();
     }
 }

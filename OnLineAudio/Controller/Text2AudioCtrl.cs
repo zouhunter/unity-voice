@@ -70,12 +70,12 @@ namespace IFLYSpeech
         private Thread downLandThread;
         private Queue<KeyValuePair<string, Params>> waitSpeekQueue = new Queue<KeyValuePair<string, Params>>();
         private bool connectError;
+        private List<string> completed = new List<string>();
         protected Txt2AudioCtrl()
         {
             if (PlayerPrefs.HasKey(play_prefKey)){
                 var value = PlayerPrefs.GetString(play_prefKey);
-                if (!string.IsNullOrEmpty(value))
-                {
+                if (!string.IsNullOrEmpty(value)){
                     audioHead = JsonUtility.FromJson<AudioHeadCatch>(value);
                 }
             }
@@ -116,29 +116,34 @@ namespace IFLYSpeech
 
         IEnumerator DownLandFromWeb(string text, Params paramss, UnityAction<AudioClip> OnGet)
         {
+            var path = AudioPath;//Path可能还没有初始化
             string audioName = AudioFileName(text, paramss);
             bool complete = false;
             string error = null;
 
-            TTS.tts_SpeakFinishedEvent += (result, data) =>
+            TTS_SpeakFinished finishEvent = (result, data) =>
             {
-                if (result == text){
+                if (result == text)
+                {
                     complete = true;
                 }
             };
 
-            TTS.ttsSpeakErrorEvent += (err) =>
+            TTS_SpeakError errorEvent = (err) =>
             {
                 complete = true;
                 error = err;
             };
+
+            TTS.tts_SpeakFinishedEvent += finishEvent;
+            TTS.ttsSpeakErrorEvent += errorEvent;
 
             waitSpeekQueue.Enqueue(new KeyValuePair<string, Params>(text, paramss));
 
             if (downLandThread == null || !downLandThread.IsAlive)
             {
                 downLandThread = new Thread(ThreadDownland);
-                downLandThread.Start();
+                downLandThread.Start(AudioPath);
             }
 
             yield return new WaitUntil(() => complete|| connectError);
@@ -163,9 +168,12 @@ namespace IFLYSpeech
                 RecordToText(audioName);
                 yield return LoadFromFile(audioName, OnGet);
             }
+
+            TTS.tts_SpeakFinishedEvent -= finishEvent;
+            TTS.ttsSpeakErrorEvent -= errorEvent;
         }
 
-        void ThreadDownland()
+        void ThreadDownland(object audioPath)
         {
             float waitTime = 5000;
             while(!TTS.active){
@@ -179,7 +187,7 @@ namespace IFLYSpeech
             while (waitSpeekQueue.Count > 0)
             {
                 var item = waitSpeekQueue.Dequeue();
-                TTS.Speak(item.Key, item.Value.ToString(), Path.Combine(AudioPath, AudioFileName(item.Key, item.Value)));
+                TTS.Speak(item.Key, item.Value.ToString(), Path.Combine(audioPath.ToString(), AudioFileName(item.Key, item.Value)));
             }
         }
 
@@ -235,9 +243,66 @@ namespace IFLYSpeech
         }
 
 
-        public IEnumerator Downland(string[] text, UnityAction<float> onProgressChanged)
+        public IEnumerator Downland(string[] text, UnityAction<float> onProgressChanged, Params paramss = null)
         {
-            throw new NotImplementedException();
+            if (paramss == null){
+                paramss = defultParams;
+            }
+            List<string> needDownLand = new List<string>();
+
+            foreach (var item in text)
+            {
+                if (!audioHead.audioKey.Contains(AudioFileName(item, paramss)))
+                {
+                    needDownLand.Add(item);
+                }
+            }
+
+            float totalCount = text.Length;
+            float currentCount = totalCount - needDownLand.Count;
+
+            if (currentCount > 0 && onProgressChanged != null) onProgressChanged(currentCount / totalCount);
+          
+            if(needDownLand.Count > 0)
+            {
+                TTS_SpeakFinished finishEvent = (result, data) =>
+                {
+                    currentCount++;
+                    if (onProgressChanged != null) onProgressChanged(currentCount / totalCount);
+                };
+
+                TTS_SpeakError errorEvent = (err) =>
+                {
+                    currentCount++;
+                    if (onProgressChanged != null) onProgressChanged(currentCount / totalCount);
+                };
+
+                TTS.tts_SpeakFinishedEvent += finishEvent;
+                TTS.ttsSpeakErrorEvent += errorEvent;
+
+
+                foreach (var item in needDownLand.ToArray())
+                {
+                    waitSpeekQueue.Enqueue(new KeyValuePair<string, Params>(item, paramss));
+                }
+
+                if (downLandThread == null || !downLandThread.IsAlive)
+                {
+                    downLandThread = new Thread(ThreadDownland);
+                    downLandThread.Start(AudioPath);
+                }
+
+                yield return new WaitUntil(() => currentCount == totalCount || connectError);
+
+                for (int i = 0; i < needDownLand.Count; i++)
+                {
+                    RecordToText(AudioFileName(needDownLand[i], paramss));
+                }
+
+                TTS.tts_SpeakFinishedEvent -= finishEvent;
+                TTS.ttsSpeakErrorEvent -= errorEvent;
+            }
+         
         }
 
         public void CleanUpCatchs()
