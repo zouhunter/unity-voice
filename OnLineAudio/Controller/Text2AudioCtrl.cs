@@ -268,13 +268,11 @@ namespace IFLYSpeech
                 TTS_SpeakFinished finishEvent = (result, data) =>
                 {
                     currentCount++;
-                    if (onProgressChanged != null) onProgressChanged(currentCount / totalCount);
                 };
 
                 TTS_SpeakError errorEvent = (err) =>
                 {
                     currentCount++;
-                    if (onProgressChanged != null) onProgressChanged(currentCount / totalCount);
                 };
 
                 TTS.tts_SpeakFinishedEvent += finishEvent;
@@ -292,7 +290,17 @@ namespace IFLYSpeech
                     downLandThread.Start(AudioPath);
                 }
 
-                yield return new WaitUntil(() => currentCount == totalCount || connectError);
+                var countTemp = currentCount;
+
+                while (currentCount != totalCount && !connectError)
+                {
+                    if(countTemp != currentCount)
+                    {
+                        if (onProgressChanged != null) onProgressChanged(currentCount / totalCount);
+                        countTemp = currentCount;
+                    }
+                    yield return null;
+                }
 
                 for (int i = 0; i < needDownLand.Count; i++)
                 {

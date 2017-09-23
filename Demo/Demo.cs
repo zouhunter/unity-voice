@@ -3,16 +3,15 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections.Generic;
 using System;
+using IFLYSpeech;
 public class Demo : MonoBehaviour
 {
-    public InputField textbox;
-    public Button tranBtn;
+    public AudioCallBackEvent callBack;
+    public Toggle pauseTog;
     public Button clearBtn;
     public Button downLandGroup;
-    public AudioSource audio;
     public Toggle[] toggles;
     private Params parma = new Params();
-
     IFLYSpeech.Txt2AudioCtrl ctrl;
     public string[] texts = {
         "本接口和QTTSSessionBegin对应，",
@@ -22,7 +21,7 @@ public class Demo : MonoBehaviour
     };
     void Start()
     {
-        tranBtn.onClick.AddListener(RequireAudio);
+        callBack.Invoke(OnCallBack);
         clearBtn.onClick.AddListener(RemoveLocal);
         downLandGroup.onClick.AddListener(GroupDownLand);
         ctrl = IFLYSpeech.Txt2AudioCtrl.Instance;
@@ -34,6 +33,11 @@ public class Demo : MonoBehaviour
         }
     }
 
+    private void OnCallBack(string arg0)
+    {
+        Debug.Log("Complete:" + arg0);
+    }
+
     private void GroupDownLand()
     {
         StartCoroutine(ctrl.Downland(texts, (x) => { Debug.Log("下载进度"+ x); }, parma));
@@ -43,12 +47,6 @@ public class Demo : MonoBehaviour
         parma.voice_name = speaker;
         //IFLYSpeech.Speakers;
     }
-
-    void RequireAudio()
-    {
-        StartCoroutine(ctrl.GetAudioClip(textbox.text, OnGet, parma));
-    }
-
     void RemoveLocal()
     {
         ctrl.CleanUpCatchs();
@@ -57,9 +55,5 @@ public class Demo : MonoBehaviour
     {
         Debug.LogError(err);
     }
-
-    void OnGet(AudioClip clip)
-    {
-        audio.PlayOneShot(clip);
-    }
 }
+
