@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace IFLYSpeech.Interanl
+namespace IFLYSpeech.Windows
 {
     public class Config
     {

@@ -5,20 +5,18 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading;
 
-namespace IFLYSpeech.Interanl
+namespace IFLYSpeech.Windows
 {
     public class TTS
     {
         private const string HENRY = "henry";
         private string sessionID;
-        private string config;
         public event TTS_SpeakFinished tts_SpeakFinishedEvent;
         public event TTS_SpeakError ttsSpeakErrorEvent;
         public bool active;
 
         public TTS(string config)
         {
-            this.config = config;
             int ret = MSPAPI.MSPLogin(null, null, config);
             if (ret != 0)
             {

@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+
 namespace IFLYSpeech
 {
-    [System.Serializable]
-    public class AudioCallBackEvent : UnityEvent<UnityAction<string>> { }
     public class AudioTimer
     {
         public string text;

@@ -4,8 +4,8 @@ using UnityEngine.Events;
 using System.Collections.Generic;
 using System;
 using IFLYSpeech;
+using IFLYSpeech.Windows;
 
-[RequireComponent(typeof(TextAudioBehaiver))]
 public class Demo : MonoBehaviour
 {
     public Button m_Play;
@@ -14,23 +14,26 @@ public class Demo : MonoBehaviour
     public Button m_ClearBtn;
     public Button downLandGroup;
     public Toggle[] toggles;
-    private Params parma = new Params();
-    IFLYSpeech.Txt2AudioCtrl ctrl { get { return IFLYSpeech.Txt2AudioCtrl.Instance; } }
     private TextAudioBehaiver audioBehaiver;
+
     void Start()
     {
-        audioBehaiver = GetComponent<TextAudioBehaiver>();
+        audioBehaiver = GetComponentInChildren<TextAudioBehaiver>();
         audioBehaiver.RegistCallBack(OnCallBack);
         m_ClearBtn.onClick.AddListener(RemoveLocal);
         m_Play.onClick.AddListener(Play);
         m_Pause.onClick.AddListener(Pause);
         downLandGroup.onClick.AddListener(GroupDownLand);
-        ctrl.onError += OnError;
+        audioBehaiver.ctrl.onError += OnError;
         for (int i = 0; i < toggles.Length; i++)
         {
             var index = i;
-            toggles[index].onValueChanged.AddListener(x=> { if (x)  ActiveSpeaker(toggles[index].GetComponentInChildren<Text>().text); });
+            toggles[index].onValueChanged.AddListener(x => { if (x) ActiveSpeaker(toggles[index].GetComponentInChildren<Text>().text); });
         }
+
+#if UNITY_WEBGL
+        m_ClearBtn.gameObject.SetActive(false);
+#endif
     }
 
     private void OnCallBack(string arg0)
@@ -40,16 +43,23 @@ public class Demo : MonoBehaviour
 
     private void GroupDownLand()
     {
-        var infos =  m_texts.text.Split(new Char[] { '|' });
-        StartCoroutine(ctrl.Downland(infos, (x) => { Debug.Log("下载进度"+ x); }));
+#if UNITY_STANDALONE
+           var infos =  m_texts.text.Split(new Char[] { '|' });
+        StartCoroutine(audioBehaiver.ctrl.Downland(infos, (x) => { Debug.Log("下载进度"+ x); }));
+#endif
+
     }
     private void ActiveSpeaker(string speaker)
     {
-        ctrl.defultParams.voice_name = speaker;
+#if UNITY_STANDALONE
+        audioBehaiver.ctrl.defultParams.voice_name = speaker;
+#endif
     }
     void RemoveLocal()
     {
-        ctrl.CleanUpCatchs();
+#if UNITY_STANDALONE
+        audioBehaiver.ctrl.CleanUpCatchs();
+#endif
     }
     void OnError(string err)
     {

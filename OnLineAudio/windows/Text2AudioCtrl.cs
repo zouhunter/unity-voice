@@ -9,11 +9,11 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace IFLYSpeech
+namespace IFLYSpeech.Windows
 {
-    public class Txt2AudioCtrl : ITextToAudio
+    public class Txt2AudioCtrl
     {
-        #region 单例
+    #region 单例
         private static Txt2AudioCtrl instance = default(Txt2AudioCtrl);
         private static object lockHelper = new object();
         public static Txt2AudioCtrl Instance
@@ -34,7 +34,7 @@ namespace IFLYSpeech
                 return instance;
             }
         }
-        #endregion
+    #endregion
         public event UnityAction<string> onError;
         private const string play_prefKey = "IFLYSpeech_audioHead";
         private AudioHeadCatch audioHead;
@@ -53,25 +53,27 @@ namespace IFLYSpeech
                 return _audipPath;
             }
         }
-        private Interanl.TTS tts;
-        private Interanl.TTS TTS
+        private Windows.TTS tts;
+        private Windows.TTS TTS
         {
             get
             {
                 if (tts == null)
                 {
-                    Interanl.Config config = new Interanl.Config("5800919a");
-                    tts = new Interanl.TTS(config.ToString());
+                    Windows.Config config = new Windows.Config("5800919a");
+                    tts = new Windows.TTS(config.ToString());
                 }
                 return tts;
             }
         }
+
+
         private Params _defultParmas;
         public Params defultParams { get { if (_defultParmas == null) _defultParmas = new Params();return _defultParmas; } }
         private Thread downLandThread;
         private Queue<KeyValuePair<string, Params>> waitSpeekQueue = new Queue<KeyValuePair<string, Params>>();
         private bool connectError;
-        private List<string> completed = new List<string>();
+        //private List<string> completed = new List<string>();
         protected Txt2AudioCtrl()
         {
             if (PlayerPrefs.HasKey(play_prefKey)){
@@ -327,4 +329,5 @@ namespace IFLYSpeech
             PlayerPrefs.SetString(play_prefKey, "");
         }
     }
+
 }

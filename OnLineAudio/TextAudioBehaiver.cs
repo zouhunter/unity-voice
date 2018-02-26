@@ -2,15 +2,18 @@
 using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections.Generic;
-
 namespace IFLYSpeech
 {
-  
     [RequireComponent(typeof(AudioSource))]
     public class TextAudioBehaiver : MonoBehaviour
     {
         private UnityAction<string> onComplete;
-        private Txt2AudioCtrl t2a { get { return Txt2AudioCtrl.Instance; } }
+#if UNITY_STANDALONE
+        public Windows.Txt2AudioCtrl ctrl { get { return Windows.Txt2AudioCtrl.Instance; } }
+#elif UNITY_WEBGL
+        public WebGL.Txt2AudioCtrl ctrl { get { return WebGL.Txt2AudioCtrl.Instance; } }
+#endif
+
         private AudioSource audioSource;
         public bool IsOn { get; set; }
         public bool IsMan { get; set; }
@@ -41,7 +44,7 @@ namespace IFLYSpeech
                 audioTimer.Stop();
             }
 
-            StartCoroutine(t2a.GetAudioClip(text, (x) =>
+            StartCoroutine(ctrl.GetAudioClip(text, (x) =>
             {
                 if (x != null)
                 {

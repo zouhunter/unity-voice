@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-namespace IFLYSpeech.Interanl
+
+namespace IFLYSpeech.Windows
 {
     public partial class MSPAPI
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_ANDROID
         public const string mscdll = "msc";
 #elif UNITY_IOS
+        public const string mscdll = "__Internal";
+#elif UNITY_WEBGL
         public const string mscdll = "__Internal";
 #endif
         [DllImport(mscdll, CallingConvention = CallingConvention.StdCall)]
