@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-namespace IFLYSpeech
+
+namespace Speech.XunFei
 {
     public static class Speakers
     {

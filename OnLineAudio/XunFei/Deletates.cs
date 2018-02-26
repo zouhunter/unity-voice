@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace IFLYSpeech
+namespace Speech.XunFei
 {
     //事件委托
     public delegate void TTS_SpeakFinished(string text,byte[] bytes);

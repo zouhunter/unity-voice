@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace IFLYSpeech.Windows
+namespace Speech.XunFei
 {
     public class Txt2AudioCtrl
     {
@@ -53,15 +53,15 @@ namespace IFLYSpeech.Windows
                 return _audipPath;
             }
         }
-        private Windows.TTS tts;
-        private Windows.TTS TTS
+        private XunFei.TTS tts;
+        private XunFei.TTS TTS
         {
             get
             {
                 if (tts == null)
                 {
-                    Windows.Config config = new Windows.Config("5800919a");
-                    tts = new Windows.TTS(config.ToString());
+                    XunFei.Config config = new XunFei.Config("5800919a");
+                    tts = new XunFei.TTS(config.ToString());
                 }
                 return tts;
             }
@@ -82,7 +82,7 @@ namespace IFLYSpeech.Windows
                     audioHead = JsonUtility.FromJson<AudioHeadCatch>(value);
                 }
             }
-            if (audioHead == null) audioHead = new IFLYSpeech.AudioHeadCatch();
+            if (audioHead == null) audioHead = new AudioHeadCatch();
         }
 
         /// <summary>

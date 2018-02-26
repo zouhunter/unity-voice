@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace IFLYSpeech.Windows
+namespace Speech.XunFei
 {
     [System.Serializable]
     public class Params {
@@ -27,29 +27,6 @@ namespace IFLYSpeech.Windows
                 param[i] = fields[i].Name + "=" + fields[i].GetValue(this);
             }
             return string.Join(",", param);
-        }
-    }
-}
-
-namespace IFLYSpeech.WebGL
-{
-    [System.Serializable]
-    public class Params
-    {
-        public string spd = "medium";
-        public string textType = "cn";
-        public string vcn = "aisxping";
-        public byte vol = 7;
-
-        public override string ToString()
-        {
-            var fields = typeof(Params).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.GetField | System.Reflection.BindingFlags.Instance);
-            var param = new string[fields.Length];
-            for (int i = 0; i < fields.Length; i++)
-            {
-                param[i] = fields[i].Name + "=" + fields[i].GetValue(this);
-            }
-            return string.Join("&", param);
         }
     }
 }

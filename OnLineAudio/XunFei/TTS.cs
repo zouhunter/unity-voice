@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading;
 
-namespace IFLYSpeech.Windows
+namespace Speech.XunFei
 {
     public class TTS
     {

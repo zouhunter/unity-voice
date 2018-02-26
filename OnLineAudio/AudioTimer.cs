@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-namespace IFLYSpeech
+namespace Speech
 {
     public class AudioTimer
     {

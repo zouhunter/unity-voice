@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace IFLYSpeech.Windows
+namespace Speech.XunFei
 {
     public partial class MSPAPI
     {

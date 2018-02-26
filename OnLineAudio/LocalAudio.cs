@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace IFLYSpeech
+namespace Speech
 {
     /// <summary>
     /// 本地音乐

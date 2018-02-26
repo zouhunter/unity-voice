@@ -3,8 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections.Generic;
 using System;
-using IFLYSpeech;
-using IFLYSpeech.Windows;
+using Speech;
 
 public class Demo : MonoBehaviour
 {

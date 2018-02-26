@@ -2,7 +2,8 @@
 using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections.Generic;
-namespace IFLYSpeech
+
+namespace Speech
 {
     [RequireComponent(typeof(AudioSource))]
     public class TextAudioBehaiver : MonoBehaviour
@@ -11,7 +12,7 @@ namespace IFLYSpeech
 #if UNITY_STANDALONE
         public Windows.Txt2AudioCtrl ctrl { get { return Windows.Txt2AudioCtrl.Instance; } }
 #elif UNITY_WEBGL
-        public WebGL.Txt2AudioCtrl ctrl { get { return WebGL.Txt2AudioCtrl.Instance; } }
+        public Tencent.Txt2AudioCtrl ctrl { get { return Tencent.Txt2AudioCtrl.Instance; } }
 #endif
 
         private AudioSource audioSource;
