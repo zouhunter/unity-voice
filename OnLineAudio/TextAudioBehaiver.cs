@@ -15,6 +15,7 @@ namespace IFLYSpeech
         public bool IsOn { get; set; }
         public bool IsMan { get; set; }
         private AudioTimer audioTimer = new AudioTimer();
+
         void Awake()
         {
             IsOn = true;
@@ -52,9 +53,10 @@ namespace IFLYSpeech
         }
 
 
-        public void Pause(bool on)
+        public void TogglePause(bool on)
         {
             if (!IsOn) return;
+
             if (audioTimer == null) return;
 
             if (!on)
@@ -69,9 +71,15 @@ namespace IFLYSpeech
             }
         }
 
-        public void Stop(string data)
+        public void StopCurrent()
         {
             if (!IsOn) return;
+            audioSource.Stop();
+            audioTimer.Stop();
+        }
+        public void Stop(string data)
+        {
+            if (!IsOn || audioTimer.text != data) return;
             audioSource.Stop();
             audioTimer.Stop();
         }

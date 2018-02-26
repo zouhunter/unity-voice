@@ -66,7 +66,8 @@ namespace IFLYSpeech
                 return tts;
             }
         }
-        private Params defultParams;
+        private Params _defultParmas;
+        public Params defultParams { get { if (_defultParmas == null) _defultParmas = new Params();return _defultParmas; } }
         private Thread downLandThread;
         private Queue<KeyValuePair<string, Params>> waitSpeekQueue = new Queue<KeyValuePair<string, Params>>();
         private bool connectError;
@@ -80,7 +81,6 @@ namespace IFLYSpeech
                 }
             }
             if (audioHead == null) audioHead = new IFLYSpeech.AudioHeadCatch();
-            defultParams = new global::Params();
         }
 
         /// <summary>

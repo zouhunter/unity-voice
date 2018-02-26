@@ -4,27 +4,27 @@ using UnityEngine.Events;
 using System.Collections.Generic;
 using System;
 using IFLYSpeech;
+
+[RequireComponent(typeof(TextAudioBehaiver))]
 public class Demo : MonoBehaviour
 {
-    public AudioCallBackEvent callBack;
-    public Toggle pauseTog;
-    public Button clearBtn;
+    public Button m_Play;
+    public Button m_Pause;
+    public InputField m_texts;
+    public Button m_ClearBtn;
     public Button downLandGroup;
     public Toggle[] toggles;
     private Params parma = new Params();
-    IFLYSpeech.Txt2AudioCtrl ctrl;
-    public string[] texts = {
-        "本接口和QTTSSessionBegin对应，",
-        "该句柄对应的相关资源（参数，合成文本，实例等）都会被释放，",
-        "调用此接口后，",
-        "用户不应再使用该句柄。"
-    };
+    IFLYSpeech.Txt2AudioCtrl ctrl { get { return IFLYSpeech.Txt2AudioCtrl.Instance; } }
+    private TextAudioBehaiver audioBehaiver;
     void Start()
     {
-        callBack.Invoke(OnCallBack);
-        clearBtn.onClick.AddListener(RemoveLocal);
+        audioBehaiver = GetComponent<TextAudioBehaiver>();
+        audioBehaiver.RegistCallBack(OnCallBack);
+        m_ClearBtn.onClick.AddListener(RemoveLocal);
+        m_Play.onClick.AddListener(Play);
+        m_Pause.onClick.AddListener(Pause);
         downLandGroup.onClick.AddListener(GroupDownLand);
-        ctrl = IFLYSpeech.Txt2AudioCtrl.Instance;
         ctrl.onError += OnError;
         for (int i = 0; i < toggles.Length; i++)
         {
@@ -40,12 +40,12 @@ public class Demo : MonoBehaviour
 
     private void GroupDownLand()
     {
-        StartCoroutine(ctrl.Downland(texts, (x) => { Debug.Log("下载进度"+ x); }, parma));
+        var infos =  m_texts.text.Split(new Char[] { '|' });
+        StartCoroutine(ctrl.Downland(infos, (x) => { Debug.Log("下载进度"+ x); }));
     }
     private void ActiveSpeaker(string speaker)
     {
-        parma.voice_name = speaker;
-        //IFLYSpeech.Speakers;
+        ctrl.defultParams.voice_name = speaker;
     }
     void RemoveLocal()
     {
@@ -54,6 +54,14 @@ public class Demo : MonoBehaviour
     void OnError(string err)
     {
         Debug.LogError(err);
+    }
+    public void Play()
+    {
+        audioBehaiver.PlayAudio(m_texts.text);
+    }
+    public void Pause()
+    {
+        audioBehaiver.TogglePause(false);
     }
 }
 
