@@ -10,7 +10,7 @@ namespace Speech
     {
         private UnityAction<string> onComplete;
 #if UNITY_STANDALONE
-        public Windows.Txt2AudioCtrl ctrl { get { return Windows.Txt2AudioCtrl.Instance; } }
+        public XunFei.Txt2AudioCtrl ctrl { get { return XunFei.Txt2AudioCtrl.Instance; } }
 #elif UNITY_WEBGL
         public Tencent.Txt2AudioCtrl ctrl { get { return Tencent.Txt2AudioCtrl.Instance; } }
 #endif

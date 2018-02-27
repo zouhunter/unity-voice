@@ -27,12 +27,16 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < toggles.Length; i++)
         {
             var index = i;
-            toggles[index].onValueChanged.AddListener(x => { if (x) ActiveSpeaker(toggles[index].GetComponentInChildren<Text>().text); });
+            toggles[index].onValueChanged.AddListener(x => { if (x) ActiveSpeaker(index); });
         }
 
 #if UNITY_WEBGL
         m_ClearBtn.gameObject.SetActive(false);
 #endif
+    }
+    private void InitToggles()
+    {
+
     }
 
     private void OnCallBack(string arg0)
@@ -48,10 +52,15 @@ public class Demo : MonoBehaviour
 #endif
 
     }
-    private void ActiveSpeaker(string speaker)
+    private void ActiveSpeaker(int index)
     {
 #if UNITY_STANDALONE
+        var speaker = toggles[index].GetComponentInChildren<Text>().text;
         audioBehaiver.ctrl.defultParams.voice_name = speaker;
+#elif UNITY_WEBGL
+        var name = Enum.GetNames(typeof(Speech.Tencent.Speaker))[index];
+        var speaker = (int)(Speech.Tencent.Speaker)Enum.Parse(typeof(Speech.Tencent.Speaker), name);
+        audioBehaiver.ctrl.defultParams.speaker = speaker;
 #endif
     }
     void RemoveLocal()
