@@ -6,9 +6,8 @@ using System.Collections.Generic;
 using System;
 using System.Reflection;
 
-namespace Speech.Tencent
+namespace TencentSpeech
 {
-
     public enum Format : int
     {
         PCM = 1,
@@ -60,7 +59,8 @@ namespace Speech.Tencent
             for (int i = 0; i < fields.Length; i++)
             {
                 var value = fields[i].GetValue(this).ToString();
-               param[i] = fields[i].Name + "=" + value;
+                value = System.Uri.EscapeDataString(value);
+                param[i] = fields[i].Name + "=" + value;
             }
             return string.Join("&", param);
         }

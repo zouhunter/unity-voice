@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Speech.XunFei
+namespace XunFeiSpeech.Internal
 {
     public partial class MSPAPI
     {

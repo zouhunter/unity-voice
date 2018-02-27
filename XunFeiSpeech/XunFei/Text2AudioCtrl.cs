@@ -9,11 +9,11 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace Speech.XunFei
+namespace XunFeiSpeech.Internal
 {
     public class Txt2AudioCtrl
     {
-    #region 单例
+        #region 单例
         private static Txt2AudioCtrl instance = default(Txt2AudioCtrl);
         private static object lockHelper = new object();
         public static Txt2AudioCtrl Instance
@@ -34,7 +34,7 @@ namespace Speech.XunFei
                 return instance;
             }
         }
-    #endregion
+        #endregion
         public event UnityAction<string> onError;
         private const string play_prefKey = "IFLYSpeech_audioHead";
         private AudioHeadCatch audioHead;
@@ -45,23 +45,24 @@ namespace Speech.XunFei
             {
                 if (_audipPath == null)
                 {
-                    _audipPath = Application.streamingAssetsPath + "/Audio";
-                    if (!Directory.Exists(_audipPath)){
+                    _audipPath = Application.streamingAssetsPath + "/XunFeiAudio";
+                    if (!Directory.Exists(_audipPath))
+                    {
                         Directory.CreateDirectory(_audipPath);
                     }
                 }
                 return _audipPath;
             }
         }
-        private XunFei.TTS tts;
-        private XunFei.TTS TTS
+        private Internal.TTS tts;
+        private Internal.TTS TTS
         {
             get
             {
                 if (tts == null)
                 {
-                    XunFei.Config config = new XunFei.Config("5800919a");
-                    tts = new XunFei.TTS(config.ToString());
+                    Internal.Config config = new Internal.Config("5800919a");
+                    tts = new Internal.TTS(config.ToString());
                 }
                 return tts;
             }
@@ -69,20 +70,22 @@ namespace Speech.XunFei
 
 
         private Params _defultParmas;
-        public Params defultParams { get { if (_defultParmas == null) _defultParmas = new Params();return _defultParmas; } }
+        public Params defultParams { get { if (_defultParmas == null) _defultParmas = new Params(); return _defultParmas; } }
         private Thread downLandThread;
         private Queue<KeyValuePair<string, Params>> waitSpeekQueue = new Queue<KeyValuePair<string, Params>>();
         private bool connectError;
         //private List<string> completed = new List<string>();
         protected Txt2AudioCtrl()
         {
-            if (PlayerPrefs.HasKey(play_prefKey)){
+            if (PlayerPrefs.HasKey(play_prefKey))
+            {
                 var value = PlayerPrefs.GetString(play_prefKey);
                 if (!string.IsNullOrEmpty(value)){
                     audioHead = JsonUtility.FromJson<AudioHeadCatch>(value);
                 }
             }
-            if (audioHead == null) audioHead = new AudioHeadCatch();
+            if (audioHead == null)
+                audioHead = new AudioHeadCatch();
         }
 
         /// <summary>
@@ -93,17 +96,19 @@ namespace Speech.XunFei
         /// <returns></returns>
         public IEnumerator GetAudioClip(string text, UnityAction<AudioClip> OnGet, Params paramss = null)
         {
-            if (paramss == null)
-            {
+            if (paramss == null){
                 paramss = defultParams;
             }
+            Debug.Log("text:" + text);
             var audioName = AudioFileName(text, paramss);
-            if (!audioHead.Contain(audioName))
+            Debug.Log("audioName:" + audioName);
+
+            if (!audioHead.Contain(audioName) && Application.platform != RuntimePlatform.WebGLPlayer)
             {
                 if (File.Exists(Path.Combine(AudioPath, audioName)))
                 {
                     RecordToText(audioName);
-                    yield return LoadFromFile(audioName, OnGet);
+                    yield return AudioHelper.LoadFromFile(AudioPath, audioName, OnGet);
                 }
                 else
                 {
@@ -112,8 +117,9 @@ namespace Speech.XunFei
             }
             else
             {
-                yield return LoadFromFile(audioName, OnGet);
+                yield return AudioHelper.LoadFromFile(AudioPath, audioName, OnGet);
             }
+
         }
 
         IEnumerator DownLandFromWeb(string text, Params paramss, UnityAction<AudioClip> OnGet)
@@ -148,9 +154,10 @@ namespace Speech.XunFei
                 downLandThread.Start(AudioPath);
             }
 
-            yield return new WaitUntil(() => complete|| connectError);
+            yield return new WaitUntil(() => complete || connectError);
 
-            if(connectError){
+            if (connectError)
+            {
                 error = "err:语音联网失败";
             }
 
@@ -168,7 +175,7 @@ namespace Speech.XunFei
             else
             {
                 RecordToText(audioName);
-                yield return LoadFromFile(audioName, OnGet);
+                yield return AudioHelper.LoadFromFile(AudioPath,audioName, OnGet);
             }
 
             TTS.tts_SpeakFinishedEvent -= finishEvent;
@@ -178,10 +185,12 @@ namespace Speech.XunFei
         void ThreadDownland(object audioPath)
         {
             float waitTime = 5000;
-            while(!TTS.active){
+            while (!TTS.active)
+            {
                 Thread.Sleep(100);
                 waitTime -= 100;
-                if(waitTime< 0){
+                if (waitTime < 0)
+                {
                     connectError = true;
                     return;
                 }
@@ -190,35 +199,6 @@ namespace Speech.XunFei
             {
                 var item = waitSpeekQueue.Dequeue();
                 TTS.Speak(item.Key, item.Value.ToString(), Path.Combine(audioPath.ToString(), AudioFileName(item.Key, item.Value)));
-            }
-        }
-
-        /// <summary>
-        /// 从本地下载
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="OnGet"></param>
-        /// <returns></returns>
-        IEnumerator LoadFromFile(string audioName, UnityAction<AudioClip> OnGet)
-        {
-            string path = AudioPath + "/" + audioName;
-            if (!string.IsNullOrEmpty(path) && File.Exists(path))
-            {
-                WWW www = new WWW("file:///" + path);
-                yield return www;
-                if (www.error != null)
-                {
-                    OnGet(null);
-                    Debug.Log(www.error);
-                }
-                else
-                {
-                    OnGet(www.GetAudioClip(false, false, AudioType.WAV));
-                }
-            }
-            else
-            {
-                OnGet(null);
             }
         }
 
@@ -237,17 +217,18 @@ namespace Speech.XunFei
             md5.Clear();
 
             string destString = "";
-            for (int i = 0; i < md5Data.Length; i++) {
+            for (int i = 0; i < md5Data.Length; i++)
+            {
                 destString += System.Convert.ToString(md5Data[i], 16).PadLeft(2, '0');
             }
             destString = destString.PadLeft(32, '0');
             return destString + ".wav";
         }
 
-
         public IEnumerator Downland(string[] text, UnityAction<float> onProgressChanged, Params paramss = null)
         {
-            if (paramss == null){
+            if (paramss == null)
+            {
                 paramss = defultParams;
             }
             List<string> needDownLand = new List<string>();
@@ -264,8 +245,8 @@ namespace Speech.XunFei
             float currentCount = totalCount - needDownLand.Count;
 
             if (currentCount > 0 && onProgressChanged != null) onProgressChanged(currentCount / totalCount);
-          
-            if(needDownLand.Count > 0)
+
+            if (needDownLand.Count > 0)
             {
                 TTS_SpeakFinished finishEvent = (result, data) =>
                 {
@@ -296,7 +277,7 @@ namespace Speech.XunFei
 
                 while (currentCount != totalCount && !connectError)
                 {
-                    if(countTemp != currentCount)
+                    if (countTemp != currentCount)
                     {
                         if (onProgressChanged != null) onProgressChanged(currentCount / totalCount);
                         countTemp = currentCount;
@@ -312,7 +293,7 @@ namespace Speech.XunFei
                 TTS.tts_SpeakFinishedEvent -= finishEvent;
                 TTS.ttsSpeakErrorEvent -= errorEvent;
             }
-         
+
         }
 
         public void CleanUpCatchs()

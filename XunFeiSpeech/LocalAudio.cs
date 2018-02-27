@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Speech
+namespace XunFeiSpeech
 {
     /// <summary>
     /// 本地音乐

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace Speech.XunFei
+namespace XunFeiSpeech.Internal
 {
     [System.Serializable]
     public class Params {

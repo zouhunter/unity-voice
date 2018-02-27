@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-namespace Speech
+namespace XunFeiSpeech
 {
     public class AudioTimer
     {
