@@ -3,13 +3,13 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections.Generic;
 
-namespace XunFeiSpeech
+namespace XunFeiSpeech.TTS
 {
     [RequireComponent(typeof(AudioSource))]
     public class TextAudioBehaiver : MonoBehaviour
     {
         private UnityAction<string> onComplete;
-        public Internal.Txt2AudioCtrl ctrl { get { return Internal.Txt2AudioCtrl.Instance; } }
+        public Txt2AudioCtrl ctrl { get { return Txt2AudioCtrl.Instance; } }
         private AudioSource audioSource;
         public bool IsOn { get; set; }
         public bool IsMan { get; set; }

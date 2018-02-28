@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace XunFeiSpeech.Internal
+namespace XunFeiSpeech.TTS
 {
     public class Txt2AudioCtrl
     {
@@ -54,15 +54,15 @@ namespace XunFeiSpeech.Internal
                 return _audipPath;
             }
         }
-        private Internal.TTS tts;
-        private Internal.TTS TTS
+        private TTS.TTSCore tts;
+        private TTS.TTSCore TTS
         {
             get
             {
                 if (tts == null)
                 {
-                    Internal.Config config = new Internal.Config("5800919a");
-                    tts = new Internal.TTS(config.ToString());
+                    TTS.Config config = new TTS.Config("5800919a");
+                    tts = new TTS.TTSCore(config.ToString());
                 }
                 return tts;
             }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace XunFeiSpeech.Internal
+namespace XunFeiSpeech.TTS
 {
     public class Config
     {

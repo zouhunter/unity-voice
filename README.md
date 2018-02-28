@@ -1,2 +1,5 @@
-# Text2Audio_Unity
-csdn说明：http://blog.csdn.net/tankerhunter/article/details/78066003
+# 在线文字转换语音
+## 腾讯
+## 讯飞
+
+# 在线语音转换文字（待添加）

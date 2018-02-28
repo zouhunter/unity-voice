@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading;
 
-namespace XunFeiSpeech.Internal
+namespace XunFeiSpeech.TTS
 {
-    public class TTS
+    public class TTSCore
     {
         private const string HENRY = "henry";
         private string sessionID;
@@ -15,7 +15,7 @@ namespace XunFeiSpeech.Internal
         public event TTS_SpeakError ttsSpeakErrorEvent;
         public bool active;
 
-        public TTS(string config)
+        public TTSCore(string config)
         {
             int ret = MSPAPI.MSPLogin(null, null, config);
             if (ret != 0)
@@ -27,7 +27,7 @@ namespace XunFeiSpeech.Internal
                 active = true;
             }
         }
-        ~TTS()
+        ~TTSCore()
         {
             var ret = MSPAPI.MSPLogout();
             if (ret != 0)

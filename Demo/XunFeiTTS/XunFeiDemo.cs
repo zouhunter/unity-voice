@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections.Generic;
 using System;
-using XunFeiSpeech;
+using XunFeiSpeech.TTS;
 
 public class XunFeiDemo : MonoBehaviour
 {

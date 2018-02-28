@@ -5,11 +5,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
-namespace XunFeiSpeech
+namespace XunFeiSpeech.TTS
 {
     public static class AudioHelper
     {
-
         /// <summary>
         /// 从本地路径下载音效
         /// </summary>

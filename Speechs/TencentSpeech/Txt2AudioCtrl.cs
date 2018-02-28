@@ -124,7 +124,8 @@ namespace TencentSpeech
 
                     if (!local)
                     {
-                        yield return IntenalDownLand(url, audioName, data => {
+                        yield return IntenalDownLand(url, audioName, data =>
+                        {
                             var audio = AudioHelper.CreateWavAudio(audioName, data);
                             OnGet(audio);
                         });
@@ -158,7 +159,6 @@ namespace TencentSpeech
             using (UnityWebRequest json_request = UnityWebRequest.Get(url))
             {
                 yield return json_request.Send();
-
                 if (json_request.isError)
                 {
                     if (onError != null)
